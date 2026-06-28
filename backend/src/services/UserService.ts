@@ -7,9 +7,11 @@ import {
   UserQueryDto,
   UserResponseDto,
 } from '@dtos/UserDto';
-import { ConflictError, NotFoundError } from '@utils/errors';
+import { ConflictError, NotFoundError, UnauthorizedError } from '@utils/errors';
 import { PaginatedResult } from '@repositories/BaseRepository';
-
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { env } from '@config/env';
 export class UserService {
   async createUser(dto: CreateUserDto): Promise<UserResponseDto> {
     const exists = await userRepository.findByEmail(dto.email);
@@ -17,8 +19,11 @@ export class UserService {
     if (exists)
       throw new ConflictError('A user with that email already exists.');
 
-    // NOTE: In real apps, hash the password here (e.g. bcrypt)
-    const user = await userRepository.create({ ...dto });
+    const user = await userRepository.create({
+      ...dto,
+      password: await bcrypt.hash(dto.password, 10),
+    });
+
     return this.toResponseDto(user);
   }
 
@@ -58,6 +63,41 @@ export class UserService {
     const user = await userRepository.findById(id);
     if (!user) throw new NotFoundError(`User with id "${id}" not found.`);
     await userRepository.softDelete(id);
+  }
+
+  async loginUser(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const user = await userRepository.findByEmail(email);
+    if (!user) throw new NotFoundError(`User with email "${email}" not found.`);
+
+    const isPasswordValid = await userService.comparePassword(
+      password,
+      user.password,
+    );
+    if (!isPasswordValid) throw new UnauthorizedError('Invalid password.');
+
+    const accessToken = jwt.sign(
+      { userId: user.id },
+      env.auth.jwt.accessTokenSecret,
+      { expiresIn: env.auth.jwt.accessTokenExpiresIn },
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      env.auth.jwt.refreshTokenSecret,
+      { expiresIn: env.auth.jwt.refreshTokenExpiresIn },
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  private async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
   }
 
   // Transforms a raw User entity → UserResponseDto.

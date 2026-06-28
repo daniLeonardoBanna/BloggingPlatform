@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import jwt from 'jsonwebtoken';
 
 const requireEnv = (key: string): string => {
   const value = process.env[key];
@@ -36,5 +37,16 @@ export const env = {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     dir: process.env.LOG_DIR || 'logs',
+  },
+
+  auth: {
+    jwt: {
+      accessTokenSecret: requireEnv('JWT_ACCESS_TOKEN_SECRET'),
+      accessTokenExpiresIn: (process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ||
+        '1h') as jwt.SignOptions['expiresIn'],
+      refreshTokenSecret: requireEnv('JWT_REFRESH_TOKEN_SECRET'),
+      refreshTokenExpiresIn: (process.env.JWT_REFRESH_TOKEN_EXPIRES_IN ||
+        '7d') as jwt.SignOptions['expiresIn'],
+    },
   },
 } as const;

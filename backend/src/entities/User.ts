@@ -35,6 +35,9 @@ export class User extends AbstractEntity {
   @Column({ name: 'isActive', default: true })
   isActive!: boolean;
 
+  @Column({ name: 'refreshToken', length: 255, nullable: true })
+  refreshToken!: string | null;
+
   @OneToMany(() => Post, (post) => post.user)
   posts!: Post[];
 

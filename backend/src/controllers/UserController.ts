@@ -13,9 +13,28 @@ import {
   CreateUserRequest,
   UpdateUserRequest,
   DeleteUserRequest,
+  SignUpRequest,
+  LoginRequest,
 } from '../types/express.d';
 
 export class UserController {
+  signUp = asyncHandler(async (req: SignUpRequest, res: Response) => {
+    console.log('Signing up user...', req.body.firstName);
+
+    return sendSuccess(res, 'User signed up.');
+  });
+
+  login = asyncHandler(async (req: LoginRequest, res: Response) => {
+    console.log('Logging in user...', req.body.email, req.body.password);
+    const { email, password } = req.body;
+
+    const { accessToken, refreshToken } = await userService.loginUser(
+      email,
+      password,
+    );
+    return sendSuccess(res, { accessToken, refreshToken }, 'User logged in.');
+  });
+
   // req.query is already UserQueryDto — typed by GetUsersRequest
   getUsers = asyncHandler(async (req: GetUsersRequest, res: Response) => {
     const { page = 1, limit = 20 } = req.query;

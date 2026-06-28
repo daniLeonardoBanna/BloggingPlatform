@@ -9,7 +9,7 @@ type ValidationTarget = 'body' | 'query' | 'params';
 export const validateDto =
   <T extends object>(
     DtoClass: ClassConstructor<T>,
-    target: ValidationTarget = 'body'
+    target: ValidationTarget = 'body',
   ) =>
   async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const input = plainToInstance(DtoClass, req[target], {

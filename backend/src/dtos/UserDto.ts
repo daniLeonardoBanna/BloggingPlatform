@@ -89,6 +89,24 @@ export class UserQueryDto {
   role?: UserRole;
 }
 
+export class SignUpDto {
+  @Expose()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  firstName!: string;
+}
+
+export class LoginDto {
+  @Expose()
+  @IsEmail()
+  email!: string;
+
+  @Expose()
+  @IsString()
+  password!: string;
+}
+
 // ─── Response DTO ─────────────────────────────────────────────────────────────
 // Every field here is EXPLICITLY opted-in with @Expose().
 // Any entity column NOT listed here is never sent to the client —

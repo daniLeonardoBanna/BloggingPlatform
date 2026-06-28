@@ -1,9 +1,27 @@
 import { Router } from 'express';
 import { userController } from '@controllers/UserController';
 import { validateDto } from '@middleware/validate';
-import { CreateUserDto, UpdateUserDto, UserQueryDto } from '@dtos/UserDto';
+import {
+  CreateUserDto,
+  LoginDto,
+  SignUpDto,
+  UpdateUserDto,
+  UserQueryDto,
+} from '@dtos/UserDto';
 
 const router: Router = Router();
+
+/**
+ * @route   POST /api/v1/users/signup
+ * @desc    Sign up a new user
+ */
+router.post('/signup', validateDto(SignUpDto), userController.signUp);
+
+/**
+ * @route   POST /api/v1/users/login
+ * @desc    Login a user
+ */
+router.post('/login', validateDto(LoginDto), userController.login);
 
 /**
  * @route   GET /api/v1/users

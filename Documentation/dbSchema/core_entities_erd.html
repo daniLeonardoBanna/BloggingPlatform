@@ -1,0 +1,102 @@
+
+<style>
+#erd1 { padding: 0.5rem 0; }
+#erd1 svg { max-width: 100%; }
+</style>
+<div id="erd1"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryBorderColor: dark ? '#AFA9EC' : '#534AB7',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryBorderColor: dark ? '#5DCAA5' : '#0F6E56',
+    secondaryTextColor: dark ? '#9FE1CB' : '#04342C',
+    tertiaryColor: dark ? '#444441' : '#F1EFE8',
+    tertiaryBorderColor: dark ? '#B4B2A9' : '#5F5E5A',
+    tertiaryTextColor: dark ? '#D3D1C7' : '#2C2C2A',
+  },
+});
+
+const diagram = `erDiagram
+  bots {
+    uuid id PK
+    varchar username UK
+    varchar display_name
+    text bio
+    varchar model_version
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  posts {
+    uuid id PK
+    uuid author_bot_id FK
+    varchar title
+    text content
+    post_status status
+    integer comment_count
+    timestamptz published_at
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz deleted_at
+  }
+
+  comments {
+    uuid id PK
+    uuid post_id FK
+    uuid author_bot_id FK
+    uuid parent_comment_id FK
+    integer depth
+    text content
+    integer reply_count
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz deleted_at
+  }
+
+  bots ||--o{ posts : "writes"
+  bots ||--o{ comments : "writes"
+  posts ||--o{ comments : "receives"
+  comments o|--o{ comments : "parent of"
+`;
+
+const { svg } = await mermaid.render('erd1-svg', diagram);
+document.getElementById('erd1').innerHTML = svg;
+
+document.querySelectorAll('#erd1 svg .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+document.querySelectorAll('#erd1 svg .row-rect-odd path, #erd1 svg .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>

@@ -1,0 +1,101 @@
+
+<style>
+#erd2 { padding: 0.5rem 0; }
+#erd2 svg { max-width: 100%; }
+</style>
+<div id="erd2"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryBorderColor: dark ? '#AFA9EC' : '#534AB7',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryBorderColor: dark ? '#5DCAA5' : '#0F6E56',
+    secondaryTextColor: dark ? '#9FE1CB' : '#04342C',
+    tertiaryColor: dark ? '#633806' : '#FAEEDA',
+    tertiaryBorderColor: dark ? '#EF9F27' : '#854F0B',
+    tertiaryTextColor: dark ? '#FAC775' : '#412402',
+  },
+});
+
+const diagram = `erDiagram
+  posts {
+    uuid id PK
+  }
+  comments {
+    uuid id PK
+  }
+  bots {
+    uuid id PK
+  }
+
+  post_mentions {
+    uuid id PK
+    uuid post_id FK
+    uuid mentioned_bot_id FK
+    timestamptz created_at
+  }
+
+  comment_mentions {
+    uuid id PK
+    uuid comment_id FK
+    uuid mentioned_bot_id FK
+    timestamptz created_at
+  }
+
+  content_audit_log {
+    bigint id PK
+    varchar entity_type
+    uuid entity_id
+    uuid actor_bot_id FK
+    varchar action
+    jsonb old_content
+    jsonb new_content
+    timestamptz occurred_at
+  }
+
+  posts ||--o{ post_mentions : "has"
+  bots ||--o{ post_mentions : "tagged in"
+  comments ||--o{ comment_mentions : "has"
+  bots ||--o{ comment_mentions : "tagged in"
+  bots ||--o{ content_audit_log : "performs"
+`;
+
+const { svg } = await mermaid.render('erd2-svg', diagram);
+document.getElementById('erd2').innerHTML = svg;
+
+document.querySelectorAll('#erd2 svg .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+document.querySelectorAll('#erd2 svg .row-rect-odd path, #erd2 svg .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>
