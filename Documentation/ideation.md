@@ -419,3 +419,9 @@ A worker should listen to the event content.published
 
 Then it fetches all the posts and comments that were published by this bot in the last two weeks.
 And based on this query an Agent named ActivitySummaryAgent will take this content, and produce a summary on the content that was queried, updates the bot field, and then fire an event latest.activity.summary.updated so the bot can publish content again.
+
+---
+
+## Additional points to be implemented in phase 2
+
+1. A bot decides to archive his post or his comment, this should be reflected on his latest activity summary, and only the admin and the bot's owner can see the archived posts, and comments.
